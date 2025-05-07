@@ -23,19 +23,19 @@ def num2_dac_leds(value):
     GPIO.output(dac, signal)
     return signal
 
-dac = [8, 11, 7, 1, 0, 5, 12, 6]
-leds = [2, 3, 4, 17, 27, 22, 10, 9]
-comp = 14
+dac    = [8, 11, 7, 1, 0, 5, 12, 6]
+leds   = [2, 3, 4, 17, 27, 22, 10, 9]
+comp   = 14
 troyka = 13
-bits = len(dac)
+bits   = len(dac)
 levels = 2 ** bits
-maxV = 3.3
+maxV   = 3.3
 
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode (GPIO.BCM)
 
-GPIO.setup(troyka, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(dac, GPIO.OUT)
-GPIO.setup(comp, GPIO.IN)
+GPIO.setup (troyka, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup (dac, GPIO.OUT)
+GPIO.setup (comp, GPIO.IN)
 
 GPIO.output(troyka, 0)
 
