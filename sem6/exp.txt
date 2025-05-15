@@ -1,0 +1,250 @@
+1. Ввод-вывод с системными прерываниями (32-bit)
+nasm
+
+section .data
+    msg db "Введите число: ", 0
+    len equ $ - msg
+    num dd 0
+
+section .text
+global _start
+_start:
+    ; Вывод сообщения
+    mov eax, 4      ; sys_write
+    mov ebx, 1      ; stdout
+    mov ecx, msg
+    mov edx, len
+    int 0x80
+
+    ; Ввод числа
+    mov eax, 3      ; sys_read
+    mov ebx, 0      ; stdin
+    mov ecx, num
+    mov edx, 4      ; размер числа (4 байта)
+    int 0x80
+
+    ; Завершение программы
+    mov eax, 1      ; sys_exit
+    xor ebx, ebx
+    int 0x80
+
+2. Ввод-вывод через printf и scanf (64-bit)
+nasm
+
+extern printf, scanf
+
+section .data
+    fmt_in  db "%d", 0
+    fmt_out db "Вы ввели: %d", 10, 0
+    num     dd 0
+
+section .text
+global main
+main:
+    push rbp
+    mov rbp, rsp
+
+    ; Ввод через scanf
+    mov rdi, fmt_in
+    mov rsi, num
+    xor eax, eax
+    call scanf
+
+    ; Вывод через printf
+    mov rdi, fmt_out
+    mov esi, [num]
+    xor eax, eax
+    call printf
+
+    pop rbp
+    ret
+
+3. Работа со стеком
+nasm
+
+push eax     ; положить eax в стек
+pop ebx      ; извлечь значение из стека в ebx
+
+; Пример обмена значений через стек
+mov eax, 10
+mov ebx, 20
+push eax
+push ebx
+pop eax      ; eax = 20
+pop ebx      ; ebx = 10
+
+4. Процедуры с полным стековым фреймом (32-bit)
+nasm
+
+section .text
+global _start
+
+_start:
+    push 10      ; аргумент для функции
+    call my_func
+    add esp, 4   ; очистка стека
+    mov ebx, eax ; результат в ebx
+    mov eax, 1   ; sys_exit
+    int 0x80
+
+my_func:
+    push ebp
+    mov ebp, esp
+    sub esp, 4   ; место под локальную переменную
+
+    mov eax, [ebp+8] ; берём аргумент
+    add eax, 5       ; что-то делаем
+
+    mov esp, ebp     ; восстанавливаем стек
+    pop ebp
+    ret
+
+5. Цепочные команды (REP, MOVSB, STOSB и др.)
+nasm
+
+section .data
+    src db "Hello", 0
+    dst times 6 db 0
+
+section .text
+global _start
+_start:
+    mov esi, src   ; источник
+    mov edi, dst   ; назначение
+    mov ecx, 6     ; количество байт
+    rep movsb      ; копирование строки
+
+6. Битовые операции
+nasm
+
+and eax, 0x0F    ; битовое И
+or  ebx, 0x80    ; битовое ИЛИ
+xor ecx, ecx     ; обнуление
+not edx          ; инверсия битов
+test eax, 1      ; проверка на чётность (ZF=1 если младший бит 0)
+
+7. Сдвиги
+nasm
+
+shl eax, 2    ; логический сдвиг влево (умножение на 4)
+shr ebx, 3    ; логический сдвиг вправо (деление на 8)
+sal ecx, 1    ; арифметический сдвиг влево (аналог SHL)
+sar edx, 2    ; арифметический сдвиг вправо (сохраняет знак)
+
+8. Упакованные данные (MMX/SSE)
+nasm
+
+section .data
+    a dw 1, 2, 3, 4
+    b dw 5, 6, 7, 8
+    result dw 0, 0, 0, 0
+
+section .text
+global _start
+_start:
+    movq mm0, [a]      ; загружаем 4 слова (64 бита)
+    movq mm1, [b]
+    paddw mm0, mm1     ; сложение упакованных слов
+    movq [result], mm0 ; сохраняем результат
+
+9. Множества (битовые маски)
+nasm
+
+mov eax, 0b1010       ; множество {1, 3}
+mov ebx, 0b1100       ; множество {2, 3}
+and eax, ebx          ; пересечение = 0b1000 (бит 3)
+or  eax, ebx          ; объединение = 0b1110 (биты 1,2,3)
+xor eax, 0b1111       ; инверсия множества
+
+1. Цепочные команды (REP, MOVS, STOS, CMPS, SCAS)
+
+Используются с префиксом REP (повторять ECX раз) для обработки строк/массивов.
+MOVS – Перемещение данных
+nasm
+
+mov esi, source   ; источник
+mov edi, dest     ; назначение
+mov ecx, N        ; количество элементов
+rep movsb         ; копирует N байт (movsw – слов, movsd – двойных слов)
+
+STOS – Заполнение памяти
+nasm
+
+mov edi, buffer   ; адрес буфера
+mov eax, 0xAB     ; значение для заполнения
+mov ecx, N        ; количество элементов
+rep stosb         ; заполняет N байт (stosw/stosd – слова/двойные слова)
+
+CMPS – Сравнение данных
+nasm
+
+mov esi, str1     ; первая строка
+mov edi, str2     ; вторая строка
+mov ecx, N        ; количество элементов
+repe cmpsb        ; сравнивает до первого несовпадения (ZF=0) или ECX=0
+
+SCAS – Поиск в памяти
+nasm
+
+mov edi, buffer   ; адрес буфера
+mov al, 'X'       ; искомый символ
+mov ecx, N        ; длина буфера
+repne scasb       ; ищет 'X' (останавливается при нахождении или ECX=0)
+
+2. Битовые сдвиги и вращения
+Логические сдвиги
+nasm
+
+shl eax, 2     ; сдвиг влево (умножение на 2² = 4)
+shr ebx, 3     ; сдвиг вправо (деление на 2³ = 8)
+
+Арифметические сдвиги (учитывают знак)
+nasm
+
+sal eax, 1     ; арифметический сдвиг влево (аналог SHL)
+sar ebx, 2     ; арифметический сдвиг вправо (сохраняет знак)
+
+Циклические сдвиги (вращения)
+nasm
+
+rol eax, 4     ; циклический сдвиг влево на 4 бита
+ror ebx, 3     ; циклический сдвиг вправо на 3 бита
+
+Сдвиги через флаг переноса (CF)
+nasm
+
+rcl eax, 1     ; циклический сдвиг влево через CF
+rcr ebx, 2     ; циклический сдвиг вправо через CF
+
+Примеры использования
+ROL для шифрования (XOR + вращение)
+nasm
+
+mov eax, 0x12345678
+xor eax, 0xAA       ; XOR-шифрование
+rol eax, 8          ; вращение на 1 байт влево
+
+Поиск нуля в строке (SCASB)
+nasm
+
+section .data
+    str db "Hello", 0
+
+section .text
+    mov edi, str
+    mov ecx, 10      ; максимальная длина
+    xor al, al       ; ищем 0 (конец строки)
+    repne scasb      ; повторяем, пока не найдём 0
+    ; EDI указывает на следующий байт после 0
+
+Заполнение массива (STOSD)
+nasm
+
+section .bss
+    array resd 100   ; массив из 100 dword
+
+section .text
+    mov edi, array
+    mov eax, 0xDEADBEEF  ; значение
+    mov ecx, 100         ; количество
+    rep stosd            ; заполняем массив
